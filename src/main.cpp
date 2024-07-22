@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <iostream>
 #include <cstring>
 #include <sstream>
@@ -7,13 +6,13 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <poll.h>
-#include <signal.h>
+#include <csignal>
 
 int run = true;
 
 void stop(int code) {
 	if (code == SIGINT) {
-		std::cout << std::endl << "[info]  | stoping server" << std::endl;
+		std::cout << std::endl << "[info]  | stopping server" << std::endl;
 		run = false;
 	}
 }
@@ -46,7 +45,7 @@ int main(int argc, char **argv) {
 	std::cout << "[info]  | server socket open" << std::endl;
 
 	if (fcntl(server_socket, F_SETFL, O_NONBLOCK) == -1) {
-		std::cerr << "[error] | unable to set the soket to non blocking";
+		std::cerr << "[error] | unable to set the socket to non blocking";
 		close(server_socket);
 		return 1;
 	}
@@ -67,7 +66,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	std::cout << "[info]  | sever binded" << std::endl;
+	std::cout << "[info]  | sever bound" << std::endl;
 
 	if (listen(server_socket, 32) == -1) {
 		std::cerr << "[error] | unable to listen" << std::endl;
