@@ -17,6 +17,21 @@ void stop(int code) {
 	}
 }
 
+int handle_client(int client_fd) {
+	char buffer[1024];
+	ssize_t response_size;
+
+	response_size = recv(client_fd, buffer, sizeof(buffer), 0);
+	if (response_size > 0)
+		std::cout << buffer << std::endl;
+	else {
+		std::cout << "[info]  | connection closed" << std::endl;
+		close(client_fd);
+		return 1;
+	}
+	return 0;
+}
+
 int main(int argc, char **argv) {
 	if (argc != 3) {
 		std::cout << "usage : ./ircserv <port> <password>" << std::endl;
@@ -76,34 +91,37 @@ int main(int argc, char **argv) {
 
 	std::cout << "[info]  | server listening" << std::endl;
 
-	struct pollfd *fds;
+	struct pollfd fds[1024];
 
-	try {
-		fds = new struct pollfd[1024];
-	} catch (std::exception &error) {
-		std::cerr << "[error] | " << error.what() << std::endl;
-		close (server_socket);
-		return 1;
-	}
-
-	std::memset(fds, 0, sizeof(fds[0]) * 1024);
+	std::memset(fds, 0, sizeof(fds));
 
 	fds[0].fd = server_socket;
 	fds[0].events = POLLIN;
 
 	signal(SIGINT, stop);
 
+	int ready;
+
 	while(run) {
-		if (poll(fds, 1024, -1) == -1 && run) {
+		ready = poll(fds, 1024, -1);
+		if (ready == -1 && run) {
 			std::cerr << "[error] | unable to use poll" << std::endl;
 			close(server_socket);
-			delete [] fds;
 			return 1;
+		}
+
+		for (int i = 0; ready > 0; ++i) {
+			if (fds[i].revents & POLLIN) {
+				if (fds[i].fd == server_socket)
+					fds[i].fd = accept(server_socket, NULL, NULL);
+				if (handle_client(fds[i].fd))
+					fds[i].fd = 0;
+				ready--;
+			}
 		}
 	}
 
 	close(server_socket);
-	delete [] fds;
 
 	return 0;
 }
