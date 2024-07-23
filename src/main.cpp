@@ -8,6 +8,8 @@
 #include <poll.h>
 #include <csignal>
 
+#define nullptr NULL
+
 int run = true;
 
 void stop(int code) {
@@ -22,15 +24,30 @@ int handle_client(int client_fd) {
 	ssize_t response_size;
 
 	response_size = recv(client_fd, buffer, sizeof(buffer), 0);
-	if (response_size > 0)
+	if (response_size > 0) {
+		std::cout << "[info]  | message received : " << std::endl;
 		std::cout << buffer << std::endl;
+		std::cout << "[info]  | end of message" << std::endl;
+	}
 	else {
-		std::cout << "[info]  | connection closed" << std::endl;
+		std::cout << "[info]  | connection closed fd : " << client_fd << std::endl;
 		close(client_fd);
 		return 1;
 	}
 	return 0;
 }
+
+void remove_closed(pollfd *fds, int* nfds, int client_index) {
+	std::cout << "[info]  | removing client index : " << client_index << std::endl;
+	for (int i = client_index; i < *nfds - 1; ++i) {
+		fds[i] = fds[i + 1];
+	}
+	(*nfds)--;
+	fds[*nfds].fd = -1;
+	fds[*nfds].events = 0;
+	fds[*nfds].revents = 0;
+}
+
 
 int main(int argc, char **argv) {
 	if (argc != 3) {
@@ -54,6 +71,14 @@ int main(int argc, char **argv) {
 
 	if (server_socket == -1) {
 		std::cerr << "[error] | unable to open server socket" << std::endl;
+		return 1;
+	}
+
+	int socket_option = 1;
+
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option))) {
+		std::cerr << "[error] | unable to make the socket reusable";
+		close(server_socket);
 		return 1;
 	}
 
@@ -101,21 +126,35 @@ int main(int argc, char **argv) {
 	signal(SIGINT, stop);
 
 	int ready;
+	int nfds = 1;
 
 	while(run) {
-		ready = poll(fds, 1024, -1);
+		ready = poll(fds, nfds, -1);
 		if (ready == -1 && run) {
 			std::cerr << "[error] | unable to use poll" << std::endl;
 			close(server_socket);
 			return 1;
 		}
 
-		for (int i = 0; ready > 0; ++i) {
+		for (int i = 0; i < nfds && ready > 0; ++i) {
 			if (fds[i].revents & POLLIN) {
-				if (fds[i].fd == server_socket)
-					fds[i].fd = accept(server_socket, NULL, NULL);
-				if (handle_client(fds[i].fd))
-					fds[i].fd = 0;
+				if (fds[i].fd == server_socket) {
+					int new_client = accept(server_socket, nullptr, nullptr);
+					if (new_client == -1) {
+						std::cerr << "[error] | unable to accept new client" << std::endl;
+					} else {
+						std::cout << "[info]  | new client connected fd : " << new_client << std::endl;
+						fcntl(new_client, F_SETFL, O_NONBLOCK);
+						fds[nfds].fd = new_client;
+						fds[nfds].events = POLLIN;
+						nfds++;
+					}
+				} else {
+					if (handle_client(fds[i].fd)) {
+						remove_closed(fds, &nfds, i);
+						i--; // Stay on the same index to check the next item after removal
+					}
+				}
 				ready--;
 			}
 		}
