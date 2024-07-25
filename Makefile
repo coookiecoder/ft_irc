@@ -1,13 +1,13 @@
 NAME=ircserv
 
-FILES=main
+FILES=main message_handle
 
 SRC=$(foreach f, $(FILES), src/$(f).c)
 OBJ=$(foreach f, $(FILES), obj/$(f).o)
 
 CXX=c++
 
-CXXFLAGS=-std=c++98 -Wall -Wextra -Werror -g3
+CXXFLAGS=-std=c++98 -Wall -Wextra -Werror -Ihdr -g3
 
 all: $(NAME)
 
