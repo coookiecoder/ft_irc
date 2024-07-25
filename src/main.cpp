@@ -34,6 +34,9 @@ int handle_client(int client_fd) {
 		close(client_fd);
 		return 1;
 	}
+
+	std::memset(buffer, 0, 1024);
+
 	return 0;
 }
 
