@@ -45,6 +45,7 @@ int handle_client(int client_fd) {
 	}
 	else {
 		std::cout << "[info]  | connection closed fd : " << client_fd << std::endl;
+		delete_user(client_fd);
 		close(client_fd);
 		return 1;
 	}
@@ -74,8 +75,9 @@ int main(int argc, char **argv) {
 
 	int port;
 	std::stringstream(argv[1]) >> port;
+
 	try {
-		server = new Server(argv[2]);
+		create_server(argv[2]);
 	} catch (std::exception& error) {
 		std::cout << "[error] | " << error.what() << std::endl;
 		return (1);
@@ -83,7 +85,7 @@ int main(int argc, char **argv) {
 
 	if (std::strlen(argv[1]) > 5 || port > 65535 || port < 0) {
 		std::cerr << "[error] | invalid port" << std::endl;
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
 
 	if (server_socket == -1) {
 		std::cerr << "[error] | unable to open server socket" << std::endl;
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -103,7 +105,7 @@ int main(int argc, char **argv) {
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option))) {
 		std::cerr << "[error] | unable to make the socket reusable";
 		close(server_socket);
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -112,7 +114,7 @@ int main(int argc, char **argv) {
 	if (fcntl(server_socket, F_SETFL, O_NONBLOCK) == -1) {
 		std::cerr << "[error] | unable to set the socket to non blocking";
 		close(server_socket);
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -129,7 +131,7 @@ int main(int argc, char **argv) {
 	if (bind(server_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) { 
 		std::cerr << "[error] | unable to bind the socket" << std::endl;
 		close(server_socket);
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -138,7 +140,7 @@ int main(int argc, char **argv) {
 	if (listen(server_socket, 32) == -1) {
 		std::cerr << "[error] | unable to listen" << std::endl;
 		close(server_socket);
-		delete server;
+		delete_server();
 		return 1;
 	}
 
@@ -161,7 +163,7 @@ int main(int argc, char **argv) {
 		if (ready == -1 && run) {
 			std::cerr << "[error] | unable to use poll" << std::endl;
 			close(server_socket);
-			delete server;
+			delete_server();
 			return 1;
 		}
 
@@ -190,7 +192,7 @@ int main(int argc, char **argv) {
 	}
 
 	close(server_socket);
-	delete server;
+	delete_server();
 
 	return 0;
 }
