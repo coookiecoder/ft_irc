@@ -23,7 +23,7 @@ public:
 	bool check_user(int client_fd);
 	void remove_user(int client_fd);
 
-	void add_nick(int client_fd, const std::string& nick);
+	int add_nick(int client_fd, const std::string& nick);
 	void add_user(std::string nick, std::string user);
 
 	std::string get_nick(int client_fd);
