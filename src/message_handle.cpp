@@ -51,9 +51,8 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		}
 	}
 
-
 	else if (!server->check_user(client_fd)) {
-		return (":server 999 " + argument + " fuck you wrong password\n");
+		return (":server 999 " + argument + " invalid command or wrong password received\n");
 	}
 
 	else if (command == "NICK") {
