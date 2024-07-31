@@ -51,32 +51,29 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		}
 	}
 
+
+	else if (!server->check_user(client_fd)) {
+		return (":server 999 " + argument + " fuck you wrong password\n");
+	}
+
 	else if (command == "NICK") {
 		token >> argument;
-		if (!server->check_user(client_fd)) {
-			return (":server 999 " + argument + " fuck you wrong password\n");
-		} else {
-			if (server->add_nick(client_fd, argument)) {
-				server->remove_user(client_fd);
-				return (":server 999 " + argument + " nick is already in use\n");
-			}
+		if (server->add_nick(client_fd, argument)) {
+			server->remove_user(client_fd);
+			return (":server 999 " + argument + " nick is already in use\n");
 		}
 	}
 
 	else if (command == "USER") {
 		token >> argument;
-		if (!server->check_user(client_fd)) {
-			return ("");
-		} else {
-			server->add_user(client_fd, argument);
-			return (":server 001 " + server->get_nick(client_fd) + " Hello World, registration in progress\n");
-		}
+		server->add_user(client_fd, argument);
+		return (":server 001 " + server->get_nick(client_fd) + " Hello World, registration in progress\n");
 	}
 
 	else if (command == "MODE") {
 		token >> argument;
-		if (!server->check_user(client_fd) || argument != server->get_nick(client_fd)) {
-			return ("");
+		if (argument != server->get_nick(client_fd)) {
+			return (":server invalid MODE command\n");
 		} else {
 			token >> argument;
 		}
