@@ -68,7 +68,7 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		if (!server->check_user(client_fd)) {
 			return ("");
 		} else {
-			server->add_user(server->get_nick(client_fd), argument);
+			server->add_user(client_fd, argument);
 			return (":server 001 " + server->get_nick(client_fd) + " Hello World, registration in progress\n");
 		}
 	}
@@ -91,6 +91,26 @@ std::string	handle_message(const std::string& message, int client_fd) {
 	return (std::string(""));
 }
 
+Client::Client(std::string nick) {
+	this->nick = nick;
+}
+
+std::string Client::get_nick(void) {
+	return this->nick;
+}
+
+std::string Client::get_user(void) {
+	return this->user;
+}
+
+void Client::set_nick(const std::string &new_nick) {
+	this->nick = new_nick;
+}
+
+void Client::set_user(const std::string &new_user) {
+	this->nick = new_user;
+}
+
 Server::Server(const std::string& password) {
 	this->password = password;
 }
@@ -109,25 +129,28 @@ bool Server::check_user(int client_fd) {
 
 void Server::remove_user(int client_fd) {
 	fd_list.remove(client_fd);
-	this->user.erase(this->get_nick(client_fd));
-	this->nick.erase(client_fd);
+	this->client.erase(client_fd);
 }
 
 int Server::add_nick(int client_fd, const std::string& nick) {
-	for (std::map<int, std::string>::iterator iterator = this->nick.begin(); iterator != this->nick.end(); ++iterator) {
-		if (iterator->second == nick)
+	for (std::map<int, Client>::iterator iterator = this->client.begin(); iterator != this->client.end(); ++iterator) {
+		if (iterator->second.get_nick() == nick)
 			return (true);
 	}
-	this->nick.insert(std::map<int, std::string>::value_type(client_fd, nick));
+	this->client.insert(std::map<int, Client>::value_type(client_fd, Client(nick)));
 	return (false);
 }
 
-void Server::add_user(std::string nick, std::string user) {
-	this->user.insert(std::map<std::string, std::string>::value_type(nick, user));
+void Server::add_user(int client_fd, std::string user) {
+	this->client.find(client_fd)->second.set_user(user);
 }
 
 std::string Server::get_nick(int client_fd) {
-	return nick.operator[](client_fd);
+	return this->client.find(client_fd)->second.get_nick();
+}
+
+std::string Server::get_user(int client_fd) {
+	return this->client.find(client_fd)->second.get_user();
 }
 
 const std::string &Server::getPassword() const {

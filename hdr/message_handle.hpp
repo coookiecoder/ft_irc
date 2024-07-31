@@ -9,11 +9,23 @@ void delete_server(void);
 void delete_user(int client_fd);
 std::string	handle_message(const std::string& message, int client_fd);
 
+class Client {
+private:
+	std::string nick;
+	std::string user;
+public:
+	Client(std::string nick);
+	std::string get_nick(void);
+	std::string get_user(void);
+
+	void set_nick(const std::string& new_nick);
+	void set_user(const std::string& new_user);
+};
+
 class Server {
 private:
 	std::string	password;
-	std::map<std::string, std::string> user;
-	std::map<int, std::string> nick;
+	std::map<int, Client> client;
 	std::list<int> fd_list;
 public:
 	explicit Server(const std::string& password);
@@ -24,9 +36,10 @@ public:
 	void remove_user(int client_fd);
 
 	int add_nick(int client_fd, const std::string& nick);
-	void add_user(std::string nick, std::string user);
+	void add_user(int client_fd, std::string user);
 
 	std::string get_nick(int client_fd);
+	std::string get_user(int client_fd);
 
 	const std::string &getPassword() const;
 };
