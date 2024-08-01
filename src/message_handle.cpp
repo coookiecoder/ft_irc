@@ -160,7 +160,6 @@ void Server::add_hostname(int client_fd, std::string hostname) {
 
 void Server::add_realname(int client_fd, std::string realname) {
 	realname = realname.c_str() + 2;
-	std::cout << realname << std::endl;
 	this->client.find(client_fd)->second.set_realname(realname);
 }
 
