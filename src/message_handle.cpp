@@ -38,7 +38,7 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		token >> argument;
 		if (argument == "LS") {
 			return (std::string("CAP * LS :none\n"));
-		} else if (argument == "END") {
+		} else if (argument == "END" && server->check_user(client_fd)) {
 			return (std::string(":server 001 " + server->get_nick(client_fd) + " Welcome to the sever\n"));
 		}
 	}
@@ -66,6 +66,11 @@ std::string	handle_message(const std::string& message, int client_fd) {
 	else if (command == "USER") {
 		token >> argument;
 		server->add_user(client_fd, argument);
+		token >> argument;
+		server->add_hostname(client_fd, argument);
+		token >> argument;
+		std::getline(token, argument);
+		server->add_realname(client_fd, argument);
 		return (":server 001 " + server->get_nick(client_fd) + " Hello World, registration in progress\n");
 	}
 
@@ -107,6 +112,14 @@ void Client::set_user(const std::string &new_user) {
 	this->nick = new_user;
 }
 
+void Client::set_hostname(const std::string &new_hostname) {
+	this->hostname = new_hostname;
+}
+
+void Client::set_realname(const std::string &new_realname) {
+	this->realname = new_realname;
+}
+
 Server::Server(const std::string& password) {
 	this->password = password;
 }
@@ -139,6 +152,16 @@ int Server::add_nick(int client_fd, const std::string& nick) {
 
 void Server::add_user(int client_fd, std::string user) {
 	this->client.find(client_fd)->second.set_user(user);
+}
+
+void Server::add_hostname(int client_fd, std::string hostname) {
+	this->client.find(client_fd)->second.set_hostname(hostname);
+}
+
+void Server::add_realname(int client_fd, std::string realname) {
+	realname = realname.c_str() + 2;
+	std::cout << realname << std::endl;
+	this->client.find(client_fd)->second.set_realname(realname);
 }
 
 std::string Server::get_nick(int client_fd) {
