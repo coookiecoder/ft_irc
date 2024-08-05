@@ -9,7 +9,7 @@ CXX=c++
 
 CXXFLAGS=-std=c++98 -Wall -Wextra -Werror -Ihdr -g3
 
-all: $(NAME)
+all: $(NAME) client
 
 $(NAME): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -19,11 +19,14 @@ obj/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean:
-	$(RM) -r obj
+	$(RM) -rf obj client
 
 fclean: clean
-	$(RM) $(NAME)
+	$(RM) -rf $(NAME)
 
 re: fclean $(NAME)
+
+client:
+	./make_client.sh
 
 .PHONY: all clean fclean re
