@@ -59,7 +59,7 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		token >> argument;
 		if (server->add_nick(client_fd, argument)) {
 			server->remove_user(client_fd);
-			return (":server 999 " + argument + " nick is already in use\n");
+			return (":server 999 " + argument + " nick is already in use or you already sent your nick\n");
 		}
 	}
 
@@ -146,6 +146,8 @@ int Server::add_nick(int client_fd, const std::string& nick) {
 		if (iterator->second.get_nick() == nick)
 			return (true);
 	}
+	if (this->client.find(client_fd) != this->client.end())
+		return (true);
 	this->client.insert(std::map<int, Client>::value_type(client_fd, Client(nick)));
 	return (false);
 }
