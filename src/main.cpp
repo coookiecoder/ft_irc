@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
 	}
 
 	while (nfds > 1) {
-		std::cout << "[info]  | new client connected fd : " << fds[1].fd << std::endl;
+		std::cout << "[info]  | client disconnected fd : " << fds[1].fd << std::endl;
 		close(fds[1].fd);
 		remove_closed(fds, &nfds, 1);
 	}
