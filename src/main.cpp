@@ -8,7 +8,7 @@
 #include <poll.h>
 #include <csignal>
 
-#include <message_handle.hpp>
+#include <Server.hpp>
 
 #define nullptr NULL
 
@@ -21,7 +21,7 @@ void stop(int code) {
 	}
 }
 
-int handle_client(int client_fd) {
+int handle_client(Server &server, int client_fd) {
 	char buffer[513];
 	ssize_t response_size;
 
@@ -34,7 +34,7 @@ int handle_client(int client_fd) {
 		std::string line;
 		std::string response;
 		while(std::getline(message,line,'\n')){
-			response = handle_message(line, client_fd);
+			response = server.handle_message(line, client_fd);
 			if (!response.empty()) {
 				std::cout << "[info]  | message sent : " << std::endl;
 				std::cout << response << std::endl;
@@ -45,7 +45,7 @@ int handle_client(int client_fd) {
 	}
 	else {
 		std::cout << "[info]  | connection closed fd : " << client_fd << std::endl;
-		delete_user(client_fd);
+		server.delete_user(client_fd);
 		close(client_fd);
 		return 1;
 	}
@@ -76,16 +76,10 @@ int main(int argc, char **argv) {
 	int port;
 	std::stringstream(argv[1]) >> port;
 
-	try {
-		create_server(argv[2]);
-	} catch (std::exception& error) {
-		std::cout << "[error] | " << error.what() << std::endl;
-		return (1);
-	}
+	Server server(argv[2]);
 
 	if (std::strlen(argv[1]) > 5 || port > 65535 || port < 0) {
 		std::cerr << "[error] | invalid port" << std::endl;
-		delete_server();
 		return 1;
 	}
 
@@ -96,7 +90,6 @@ int main(int argc, char **argv) {
 
 	if (server_socket == -1) {
 		std::cerr << "[error] | unable to open server socket" << std::endl;
-		delete_server();
 		return 1;
 	}
 
@@ -105,7 +98,6 @@ int main(int argc, char **argv) {
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &socket_option, sizeof(socket_option))) {
 		std::cerr << "[error] | unable to make the socket reusable";
 		close(server_socket);
-		delete_server();
 		return 1;
 	}
 
@@ -114,7 +106,6 @@ int main(int argc, char **argv) {
 	if (fcntl(server_socket, F_SETFL, O_NONBLOCK) == -1) {
 		std::cerr << "[error] | unable to set the socket to non blocking";
 		close(server_socket);
-		delete_server();
 		return 1;
 	}
 
@@ -128,10 +119,9 @@ int main(int argc, char **argv) {
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(port);
 
-	if (bind(server_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) { 
+	if (bind(server_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		std::cerr << "[error] | unable to bind the socket" << std::endl;
 		close(server_socket);
-		delete_server();
 		return 1;
 	}
 
@@ -140,7 +130,6 @@ int main(int argc, char **argv) {
 	if (listen(server_socket, 32) == -1) {
 		std::cerr << "[error] | unable to listen" << std::endl;
 		close(server_socket);
-		delete_server();
 		return 1;
 	}
 
@@ -163,7 +152,6 @@ int main(int argc, char **argv) {
 		if (ready == -1 && run) {
 			std::cerr << "[error] | unable to use poll" << std::endl;
 			close(server_socket);
-			delete_server();
 			return 1;
 		}
 
@@ -181,7 +169,7 @@ int main(int argc, char **argv) {
 						nfds++;
 					}
 				} else {
-					if (handle_client(fds[i].fd)) {
+					if (handle_client(server, fds[i].fd)) {
 						remove_closed(fds, &nfds, i);
 						i--; // Stay on the same index to check the next item after removal
 					}
@@ -197,7 +185,6 @@ int main(int argc, char **argv) {
 		remove_closed(fds, &nfds, 1);
 	}
 	close(server_socket);
-	delete_server();
 
 	return 0;
 }

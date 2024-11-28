@@ -1,6 +1,6 @@
 NAME=ircserv
 
-FILES=main message_handle
+FILES=main Client Server
 
 SRC=$(foreach f, $(FILES), src/$(f).c)
 OBJ=$(foreach f, $(FILES), obj/$(f).o)

@@ -1,24 +1,6 @@
-#include <sstream>
-#include <iostream>
-#include <algorithm>
+#include <Server.hpp>
 
-#include <message_handle.hpp>
-
-Server * server;
-
-void create_server(const std::string& password) {
-	server = new Server(password);
-}
-
-void delete_server(void) {
-	delete server;
-}
-
-void delete_user(int client_fd) {
-	server->remove_user(client_fd);
-}
-
-std::string	handle_message(const std::string& message, int client_fd) {
+std::string Server::handle_message(const std::string& message, int client_fd) {
 	std::string command;
 	std::string argument;
 	std::stringstream token(message);
@@ -38,86 +20,58 @@ std::string	handle_message(const std::string& message, int client_fd) {
 		token >> argument;
 		if (argument == "LS") {
 			return (std::string("CAP * LS :none\n"));
-		} else if (argument == "END" && server->check_user(client_fd)) {
-			return (std::string(":server 001 " + server->get_nick(client_fd) + " Welcome to the sever\n"));
+		} else if (argument == "END" && this->check_user(client_fd)) {
+			return (std::string(":server 001 " + this->get_nick(client_fd) + " Welcome to the sever\n"));
 		}
 	}
 
 	else if (command == "PASS") {
 		token >> argument;
-		if (argument == server->getPassword()) {
-			server->add_user(client_fd);
+		if (argument == this->getPassword()) {
+			this->add_user(client_fd);
 			return (std::string(""));
 		}
 	}
 
-	else if (!server->check_user(client_fd)) {
+	else if (!this->check_user(client_fd)) {
 		return (":server 999 " + argument + " invalid command or wrong password received\n");
 	}
 
 	else if (command == "NICK") {
 		token >> argument;
-		if (server->add_nick(client_fd, argument)) {
-			server->remove_user(client_fd);
+		if (this->add_nick(client_fd, argument)) {
+			this->remove_user(client_fd);
 			return (":server 999 " + argument + " nick is already in use or you already sent your nick\n");
 		}
 	}
 
 	else if (command == "USER") {
 		token >> argument;
-		server->add_user(client_fd, argument);
+		this->add_user(client_fd, argument);
 		token >> argument;
-		server->add_hostname(client_fd, argument);
+		this->add_hostname(client_fd, argument);
 		token >> argument;
 		std::getline(token, argument);
-		server->add_realname(client_fd, argument);
-		return (":server 001 " + server->get_nick(client_fd) + " Hello World, registration in progress\n");
+		this->add_realname(client_fd, argument);
+		return (":server 001 " + this->get_nick(client_fd) + " Hello World, registration in progress\n");
 	}
 
 	else if (command == "MODE") {
 		token >> argument;
-		if (argument != server->get_nick(client_fd)) {
+		if (argument != this->get_nick(client_fd)) {
 			return (":server invalid MODE command\n");
 		} else {
 			token >> argument;
 		}
 
 		if (argument == "+i") {
-			return (":server MODE " + server->get_nick(client_fd) + " +i\n");
+			return (":server MODE " + this->get_nick(client_fd) + " +i\n");
 		} else if (argument == "-i") {
-			return (":server MODE " + server->get_nick(client_fd) + " -i\n");
+			return (":server MODE " + this->get_nick(client_fd) + " -i\n");
 		}
 	}
 
 	return (std::string(""));
-}
-
-Client::Client(std::string nick) {
-	this->nick = nick;
-}
-
-std::string Client::get_nick(void) {
-	return this->nick;
-}
-
-std::string Client::get_user(void) {
-	return this->user;
-}
-
-void Client::set_nick(const std::string &new_nick) {
-	this->nick = new_nick;
-}
-
-void Client::set_user(const std::string &new_user) {
-	this->nick = new_user;
-}
-
-void Client::set_hostname(const std::string &new_hostname) {
-	this->hostname = new_hostname;
-}
-
-void Client::set_realname(const std::string &new_realname) {
-	this->realname = new_realname;
 }
 
 Server::Server(const std::string& password) {
@@ -131,6 +85,11 @@ Server::~Server() {
 void Server::add_user(int client_fd) {
 	fd_list.push_front(client_fd);
 }
+
+void Server::delete_user(int client_fd) {
+	fd_list.remove(client_fd);
+}
+
 
 bool Server::check_user(int client_fd) {
 	return (std::find(fd_list.begin(), fd_list.end(), client_fd) != fd_list.end());
