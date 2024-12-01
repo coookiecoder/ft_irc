@@ -1,7 +1,7 @@
 #include <Client.hpp>
 
 Client::Client() {
-
+	authenticated = false;
 }
 
 Client::~Client() {
@@ -15,7 +15,7 @@ std::string Client::cap(std::stringstream &token) {
 
 	if (buffer == "LS")
 		return std::string("CAP * LS :none\n");
-	if (buffer == "END")
+	if (buffer == "END" && authenticated)
 		return std::string(":server 001 " + this->nick + " Welcome to the sever\n");
 	return std::string("unknown command");
 }

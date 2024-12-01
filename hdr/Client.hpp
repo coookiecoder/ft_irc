@@ -22,4 +22,6 @@ public:
 	void set_user(const std::string& new_user);
 	void set_hostname(const std::string& new_hostname);
 	void set_realname(const std::string& new_realname);
+
+	bool authenticated;
 };
