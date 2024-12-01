@@ -83,8 +83,18 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	if (port <= 1024)
+	for (size_t index = 0; index < std::strlen(argv[1]); ++index) {
+		if (!std::isdigit(argv[1][index])) {
+			std::cerr << "[error] | invalid port" << std::endl;
+			return 1;
+		}
+	}
+
+	if (port <= 1024 && port != 0)
 		std::cout << "[info]  | need root permission for port <= 1024, (will still try to use the port)" << std::endl;
+
+	if (port == 0)
+		std::cout << "[indo]  | assigning a random port since the port 0 is specified" << std::endl;
 
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -111,13 +121,7 @@ int main(int argc, char **argv) {
 
 	std::cout << "[info]  | server socket set to non blocking" << std::endl;
 
-	struct sockaddr_in addr;
-
-	std::memset(&addr, 0, sizeof(addr));
-
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(port);
+	struct sockaddr_in addr = {AF_INET, INADDR_ANY, {htons(port)}, {0}};
 
 	if (bind(server_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		std::cerr << "[error] | unable to bind the socket" << std::endl;
