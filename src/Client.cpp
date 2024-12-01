@@ -1,10 +1,12 @@
 #include <Client.hpp>
 
-Client::Client() {
+Client::Client(const std::string& client_fd, int fd) {
 	authenticated = false;
+	nick = client_fd;
 	user = "";
 	hostname = "";
 	realname = "";
+	this->fd = fd;
 }
 
 Client::~Client() {
@@ -20,7 +22,7 @@ std::string Client::cap(std::stringstream &token) {
 		return std::string("CAP * LS :none\n");
 	if (buffer == "END" && authenticated)
 		return std::string(":server 001 " + this->nick + " Welcome to the sever\n");
-	return std::string("unknown command");
+	return std::string("");
 }
 
 std::string Client::get_nick() {
@@ -31,18 +33,34 @@ std::string Client::get_user() {
 	return this->user;
 }
 
-void Client::set_nick(const std::string &new_nick) {
+std::string Client::get_host() {
+	return this->hostname;
+}
+
+std::string Client::set_nick(const std::string &new_nick) {
 	this->nick = new_nick;
+	return std::string("");
 }
 
-void Client::set_user(const std::string &new_user) {
+std::string Client::set_user(const std::string &new_user) {
 	this->nick = new_user;
+	return std::string("");
 }
 
-void Client::set_hostname(const std::string &new_hostname) {
+std::string Client::set_hostname(const std::string &new_hostname) {
 	this->hostname = new_hostname;
+	return std::string("");
 }
 
-void Client::set_realname(const std::string &new_realname) {
+std::string Client::set_realname(const std::string &new_realname) {
 	this->realname = new_realname;
+	return std::string("");
+}
+
+bool Client::operator==(const Client& other_client) {
+	return this->nick == other_client.nick;
+}
+
+int Client::get_fd() {
+	return fd;
 }

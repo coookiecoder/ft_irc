@@ -7,12 +7,23 @@
 #include <list>
 #include <algorithm>
 
+#include <cstring>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <csignal>
+
+
 #include <Client.hpp>
+#include <Channel.hpp>
 
 class Server {
 private:
 	std::string	password;
 	std::map<int, Client> client;
+	std::list<Channel> channel;
 public:
 	explicit Server(const std::string& password);
 	~Server();

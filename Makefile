@@ -1,8 +1,8 @@
 NAME=ircserv
 
-FILES=main Client Server
+FILES=main Client Server Channel
 
-SRC=$(foreach f, $(FILES), src/$(f).c)
+SRC=$(foreach f, $(FILES), src/$(f).cpp)
 OBJ=$(foreach f, $(FILES), obj/$(f).o)
 
 CXX=c++
