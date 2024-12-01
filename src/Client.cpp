@@ -1,7 +1,23 @@
 #include <Client.hpp>
 
-Client::Client(const std::string& nick) {
-	this->nick = nick;
+Client::Client() {
+
+}
+
+Client::~Client() {
+
+}
+
+std::string Client::cap(std::stringstream &token) {
+	std::string buffer;
+
+	token >> buffer;
+
+	if (buffer == "LS")
+		return std::string("CAP * LS :none\n");
+	if (buffer == "END")
+		return std::string(":server 001 " + this->nick + " Welcome to the sever\n");
+	return std::string("unknown command");
 }
 
 std::string Client::get_nick() {

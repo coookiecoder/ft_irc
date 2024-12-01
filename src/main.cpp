@@ -121,7 +121,13 @@ int main(int argc, char **argv) {
 
 	std::cout << "[info]  | server socket set to non blocking" << std::endl;
 
-	struct sockaddr_in addr = {AF_INET, INADDR_ANY, {htons(port)}, {0}};
+	struct sockaddr_in addr;
+
+	std::memset(&addr, 0, sizeof(struct sockaddr));
+
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_port = htons(port);
 
 	if (bind(server_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		std::cerr << "[error] | unable to bind the socket" << std::endl;
@@ -167,6 +173,7 @@ int main(int argc, char **argv) {
 						std::cerr << "[error] | unable to accept new client" << std::endl;
 					} else {
 						std::cout << "[info]  | new client connected fd : " << new_client << std::endl;
+						server.add_user(new_client);
 						fcntl(new_client, F_SETFL, O_NONBLOCK);
 						fds[nfds].fd = new_client;
 						fds[nfds].events = POLLIN;

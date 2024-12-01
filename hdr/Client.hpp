@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 
 class Client {
 private:
@@ -9,7 +10,11 @@ private:
 	std::string hostname;
 	std::string realname;
 public:
-	Client(const std::string& nick);
+	Client();
+	~Client();
+
+	std::string cap(std::stringstream &token);
+
 	std::string get_nick();
 	std::string get_user();
 
