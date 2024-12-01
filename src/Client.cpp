@@ -2,6 +2,9 @@
 
 Client::Client() {
 	authenticated = false;
+	user = "";
+	hostname = "";
+	realname = "";
 }
 
 Client::~Client() {

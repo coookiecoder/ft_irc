@@ -19,14 +19,14 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 	if (command == "PING")
 		return std::string("PONG server");
 
-	if (command == "CAP")
-		return this->client.find(client_fd)->second.cap(token);
-
 	if (command == "PASS") {
 		token >> command;
 		this->client.find(client_fd)->second.authenticated = command == this->password;
 		return std::string("");
 	}
+
+	if (command == "CAP")
+		return this->client.find(client_fd)->second.cap(token);
 
 	return std::string("");
 }
