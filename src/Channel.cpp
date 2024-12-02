@@ -1,7 +1,8 @@
 #include <Channel.hpp>
 
-Channel::Channel(const std::string &name) {
+Channel::Channel(const std::string &name, Client& user) {
     this->name = name;
+	this->operator_member.push_back(user);
 }
 
 Channel::~Channel() {
@@ -25,7 +26,8 @@ void Channel::set_password(const std::string &password, Client& user) {
 }
 
 void Channel::add_member(const Client& new_client) {
-    this->member.push_back(new_client);
+	if (find(member.begin(), member.end(), new_client) == member.end())
+	    this->member.push_back(new_client);
 }
 
 void Channel::add_operator(const Client& new_operator, Client& user) {

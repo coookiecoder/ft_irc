@@ -33,7 +33,7 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 
 	if (command == "NICK") {
 		token >> command;
-		if (!command.empty()) {
+		if (!command.empty() && command != "NICK") {
 			if (command == this->client.find(client_fd)->second.get_nick())
 				return std::string("");
 			for (std::map<int, Client>::iterator iterator = this->client.begin(); iterator != this->client.end(); iterator++) {
@@ -47,7 +47,7 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 
 	if (command == "USER") {
 		token >> command;
-		if (!command.empty()) {
+		if (!command.empty() && command != "USER") {
 			return this->client.find(client_fd)->second.set_user(command);
 		}
 		return std::string("");
@@ -55,7 +55,9 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 
 	if (command == "JOIN") {
 		token >> command;
-		if (!command.empty()) {
+		if (!command.empty() && command != "JOIN") {
+			if (command[0] != '#')
+				command = "#" + command;
 			// Check if the channel already exists
 			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
 				if (iterator->get_name() == command) {
@@ -65,7 +67,7 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 				}
 			}
 			// Create a new channel
-			this->channel.push_back(Channel(command));
+			this->channel.push_back(Channel(command, this->client.find(client_fd)->second));
 			this->channel.back().add_member(this->client.find(client_fd)->second);
 			std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " created " << command << std::endl;
 			return std::string("");
@@ -75,7 +77,9 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 	if (command == "PRIVMSG") {
 		token >> command;
 		size_t pos = message.find(':');
-		if (!command.empty() && pos != std::string::npos) {
+		if (!command.empty() && pos != std::string::npos && command != "PRIVMSG" && command[0] == '#') {
+			std::cout << "[info]  | message for channel " << command << std::endl;
+			//send to a channel
 			std::string message_to_client = message.substr(pos + 1);
 			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
 				if (iterator->get_name() == command) {
@@ -89,6 +93,19 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 					return std::string("");
 				}
 			}
+		}
+		else if (!command.empty() && pos != std::string::npos && command != "PRIVMSG" && command[0] != '#') {
+			std::cout << "[info]  | message for user" << command << std::endl;
+			//send to a user
+			std::string message_to_client = message.substr(pos + 1);
+			for (std::map<int, Client>::iterator client_list = this->client.begin(); client_list != this->client.end(); client_list++) {
+				if (client_list->second.get_nick() == command) {
+					std::string buffer(":" + this->client.find(client_fd)->second.get_nick() + "!" + this->client.find(client_fd)->second.get_user() + "@" + this->client.find(client_fd)->second.get_host() + " PRIVMSG " + command + " :" + message_to_client + "\n");
+					send(client_list->first, buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " sent a message to " << client_list->first << std::endl;
+				}
+			}
+			return std::string("");
 		}
 	}
 

@@ -18,7 +18,7 @@ class Channel {
         bool topic_restriction;
         int user_limit;
     public:
-        Channel(const std::string &name);
+        Channel(const std::string &name, Client &user);
         ~Channel();
 
         void set_name(const std::string &name);
