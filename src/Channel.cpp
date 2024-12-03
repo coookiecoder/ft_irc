@@ -68,6 +68,24 @@ bool Channel::is_member(int client_fd) {
 	return (false);
 }
 
+#include <iostream> 
+
+void Channel::kick(std::string nick_to_kick, Client &user, std::string message) {
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			if (client_list->get_nick() == nick_to_kick) {
+				size_t pos = message.find(':');
+				std::string message_to_client = message.substr(pos + 1);
+				std::string buffer(":" + user.get_nick() + "!" + user.get_user() + "@" + user.get_host() + " KICK " + name + " " + client_list->get_nick() + " :" + message_to_client + "\n");
+				std::cout << buffer << std::endl;
+				send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+				member.remove(*client_list);
+				return ;
+			}
+		}
+	}
+}
+
 std::string Channel::get_name() {
     return this->name;
 }

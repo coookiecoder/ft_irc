@@ -38,8 +38,9 @@ std::string Client::get_host() {
 }
 
 std::string Client::set_nick(const std::string &new_nick) {
+	std::string buffer(":" + this->get_nick() + "!" + this->get_user() + "@" + this->get_host() + " NICK :" + new_nick + "\n");
 	this->nick = new_nick;
-	return std::string("");
+	return std::string(buffer);
 }
 
 std::string Client::set_user(const std::string &new_user) {

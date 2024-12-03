@@ -4,6 +4,8 @@
 #include <string>
 #include <algorithm>
 
+#include <sys/socket.h>
+
 #include <Client.hpp>
 
 class Channel {
@@ -37,6 +39,8 @@ class Channel {
         void set_user_limit(int new_user_limit, Client& user);
 
 		bool is_member(int client_fd);
+	
+		void kick(std::string nick_to_kick, Client &user, std::string message);
 
         std::string get_name();
 
