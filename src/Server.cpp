@@ -150,4 +150,7 @@ void Server::add_user(int client_fd) {
 
 void Server::delete_user(int client_fd) {
 	this->client.erase(client_fd);
+	for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
+		iterator->del_user(this->client.find(client_fd)->second);
+	}	
 }

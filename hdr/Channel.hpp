@@ -42,6 +42,8 @@ class Channel {
 	
 		void kick(std::string nick_to_kick, Client &user, std::string message);
 
+		void del_user(Client& user);
+
         std::string get_name();
 
         std::list<Client>::iterator get_member_begin();
