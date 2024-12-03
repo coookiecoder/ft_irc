@@ -27,19 +27,13 @@ int handle_client(Server &server, int client_fd) {
 
 	response_size = recv(client_fd, buffer, sizeof(buffer), 0);
 	if (response_size > 0) {
-		std::cout << "[info]  | message received : " << std::endl;
-		std::cout << buffer << std::endl;
-		std::cout << "[info]  | end of message" << std::endl;
 		std::stringstream message(buffer);
 		std::string line;
 		std::string response;
 		while(std::getline(message,line,'\n')){
 			response = server.handle_message(line, client_fd);
 			if (!response.empty()) {
-				std::cout << "[info]  | message sent : " << std::endl;
-				std::cout << response << std::endl;
 				send(client_fd, response.c_str(), response.length(), MSG_DONTWAIT);
-				std::cout << "[info]  | end of message" << std::endl;
 			}
 		}
 	}
@@ -170,7 +164,7 @@ int main(int argc, char **argv) {
 				if (fds[i].fd == server_socket) {
 					int new_client = accept(server_socket, nullptr, nullptr);
 					if (new_client == -1) {
-						std::cerr << "[error] | unable to accept new client" << std::endl;
+						std::cerr << "[warn]  | unable to accept new client" << std::endl;
 					} else {
 						std::cout << "[info]  | new client connected fd : " << new_client << std::endl;
 						server.add_user(new_client);
