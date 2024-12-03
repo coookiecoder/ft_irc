@@ -20,6 +20,7 @@ class Channel {
         bool invite_only;
         bool topic_restriction;
         int user_limit;
+		int user;
     public:
         Channel(const std::string &name, Client &user);
         ~Channel();
@@ -29,7 +30,7 @@ class Channel {
         void set_password(const std::string &password, Client& user);
 
         bool add_member(const Client& new_client, std::string password);
-        void add_operator(const Client& new_operator, Client& user);
+        void add_operator(Client& new_operator, Client& user);
 		void remove_operator(Client& new_operator, Client& user);
 		void add_invinted(const Client& new_client, Client& user);
 

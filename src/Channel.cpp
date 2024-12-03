@@ -1,6 +1,9 @@
 #include <Channel.hpp>
 
 Channel::Channel(const std::string &name, Client& user) {
+	this->invite_only = false;
+	this->user = 0;
+	this->user_limit = 0;
     this->name = name;
 	this->operator_member.push_back(user);
 }
@@ -29,31 +32,53 @@ std::string Channel::set_topic(const std::string &topic, Client& user) {
 }
 
 void Channel::set_password(const std::string &password, Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        this->password = password;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		this->password = password;
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			if (!password.empty()) {
+				std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " -k :Channel key set : " + password + "\n");
+				send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+			} else {
+				std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " -k :Channel key removed\n");
+				send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+			}
+		}
+	}
 }
 
 bool Channel::add_member(const Client& new_client, std::string password) {
-	if (find(member.begin(), member.end(), new_client) == member.end() && (password == this->password || this->password.empty()) && !invite_only) {
+	if (find(member.begin(), member.end(), new_client) == member.end() && (password == this->password || this->password.empty()) && !invite_only && (user < user_limit || !user_limit)) {
 		this->member.push_back(new_client);
+		user++;
 		return true;
 	} else if (find(member.begin(), member.end(), new_client) == member.end() && find(invinted_member.begin(), invinted_member.end(), new_client) != invinted_member.end()) {
 		this->member.push_back(new_client);
+		user++;
 		return true;
 	}
 	return false;
 }
 
-void Channel::add_operator(const Client& new_operator, Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        this->operator_member.push_back(new_operator);
+void Channel::add_operator(Client& new_operator, Client& user) {
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		this->operator_member.push_back(new_operator);
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			std::string buffer(":server 341 " + client_list->get_nick() + " " + name + " " + new_operator.get_nick() + " :Is now an operator\n");
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::remove_operator(Client& new_operator, Client& user) {
     if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
 		for (std::list<Client>::iterator client_list = this->operator_member.begin(); client_list != this->operator_member.end(); client_list++) {
-			if (client_list->get_nick() == new_operator.get_nick())
+			if (client_list->get_nick() == new_operator.get_nick()) {
 				this->operator_member.remove(*client_list);
+				for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+					std::string buffer(":server 341 " + client_list->get_nick() + " " + name + " " + new_operator.get_nick() + " :Is no longer an operator\n");
+					send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+				}
+			}
 		}
 	}
 }
@@ -65,31 +90,67 @@ void Channel::add_invinted(const Client& new_client, Client& user) {
 }
 
 void Channel::set_invit_only(Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        invite_only = true;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		invite_only = true;
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " +i :Invite-only mode set\n");
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::set_invit_open(Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        invite_only = false;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		invite_only = false;
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " -i :Invite-only mode set\n");
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::set_topic_restricted(Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        topic_restriction = true;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		topic_restriction = true;
+		for (std::list<Client>::iterator client_list = this->member.begin();
+			 client_list != this->member.end(); client_list++) {
+			std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " +t :Topic restrictions set\n");
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::set_topic_not_restricted(Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        topic_restriction = false;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		topic_restriction = false;
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			std::string buffer(":server 324 " + client_list->get_nick() + " " + name + " -t :Topic restrictions set\n");
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::set_user_limit(int new_user_limit, Client& user) {
-    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
-        user_limit = new_user_limit;
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
+		user_limit = new_user_limit;
+		for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+			std::string buffer;
+			if (new_user_limit)
+				buffer = ":server 324 " + client_list->get_nick() + " " + name + " +l :User limit set\n";
+			else
+				buffer = ":server 324 " + client_list->get_nick() + " " + name + " -l :User limit unset\n";
+			send(client_list->get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		}
+	}
 }
 
 void Channel::set_mode(std::string message, Client& user) {
+	if (find(operator_member.begin(), operator_member.end(), user) == operator_member.end()) {
+		std::string buffer(":server 482 " + user.get_nick() + " " + name + " :You're not channel operator\n");
+		send(user.get_fd(), buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+		return ;
+	}
+
     std::istringstream token(message);
     std::string modeStr;
     token >> modeStr;
@@ -97,7 +158,7 @@ void Channel::set_mode(std::string message, Client& user) {
 	token >> modeStr;
 
     if (modeStr.size() < 2)
-        return;
+        return ;
 
     char mode = modeStr[1];
     bool addingMode = (modeStr[0] != '-');  // '+' for adding modes, '-' for removing
