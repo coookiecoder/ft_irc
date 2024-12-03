@@ -27,7 +27,7 @@ class Channel {
 		std::string set_topic(const std::string &topic, Client& user);
         void set_password(const std::string &password, Client& user);
 
-        void add_member(const Client& new_client);
+        void add_member(const Client& new_client, std::string password);
         void add_operator(const Client& new_operator, Client& user);
 
         void set_invit_only(Client& user);

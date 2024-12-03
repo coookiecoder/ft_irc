@@ -61,14 +61,18 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 			// Check if the channel already exists
 			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
 				if (iterator->get_name() == command) {
-					iterator->add_member(this->client.find(client_fd)->second);
+					std::string password;
+					token >> password;
+					iterator->add_member(this->client.find(client_fd)->second, password);
 					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " joined " << command << std::endl;
 					return std::string("");
 				}
 			}
 			// Create a new channel
 			this->channel.push_back(Channel(command, this->client.find(client_fd)->second));
-			this->channel.back().add_member(this->client.find(client_fd)->second);
+			std::string password;
+			token >> password;
+			this->channel.back().add_member(this->client.find(client_fd)->second, password);
 			std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " created " << command << std::endl;
 			return std::string("");
 		}

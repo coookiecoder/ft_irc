@@ -33,8 +33,8 @@ void Channel::set_password(const std::string &password, Client& user) {
         this->password = password;
 }
 
-void Channel::add_member(const Client& new_client) {
-	if (find(member.begin(), member.end(), new_client) == member.end())
+void Channel::add_member(const Client& new_client, std::string password) {
+	if (find(member.begin(), member.end(), new_client) == member.end() && (password == this->password || this->password.empty()))
 	    this->member.push_back(new_client);
 }
 
