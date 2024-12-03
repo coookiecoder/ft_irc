@@ -36,11 +36,19 @@ void Channel::set_password(const std::string &password, Client& user) {
 void Channel::add_member(const Client& new_client, std::string password) {
 	if (find(member.begin(), member.end(), new_client) == member.end() && (password == this->password || this->password.empty()))
 	    this->member.push_back(new_client);
+	else if (find(member.begin(), member.end(), new_client) == member.end() && find(invinted_member.begin(), invinted_member.end(), new_client) == invinted_member.end())
+	    this->member.push_back(new_client);
 }
 
 void Channel::add_operator(const Client& new_operator, Client& user) {
     if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
         this->operator_member.push_back(new_operator);
+}
+
+void Channel::add_invinted(const Client& new_client, Client& user) {
+    if (find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
+		if (find(invinted_member.begin(), invinted_member.end(), user) == invinted_member.end())
+	        this->invinted_member.push_back(new_client);
 }
 
 void Channel::set_invit_only(Client& user) {
@@ -99,9 +107,16 @@ void Channel::del_user(Client& user) {
 		}
 	}
 
-	for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+	for (std::list<Client>::iterator client_list = this->operator_member.begin(); client_list != this->operator_member.end(); client_list++) {
 		if (client_list->get_fd() == user.get_fd()) {
 			operator_member.remove(*client_list);
+			break;
+		}
+	}
+
+	for (std::list<Client>::iterator client_list = this->invinted_member.begin(); client_list != this->invinted_member.end(); client_list++) {
+		if (client_list->get_fd() == user.get_fd()) {
+			invinted_member.remove(*client_list);
 			break;
 		}
 	}

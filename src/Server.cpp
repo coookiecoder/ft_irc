@@ -130,6 +130,28 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 		}
 	}
 
+	if (command == "INVITE") {
+		std::string nick;
+		token >> nick;
+		token >> command;
+		if (!command.empty() && command != "INVITE" && nick != command) {
+			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
+				if (iterator->get_name() == command && iterator->is_member(client_fd)) {
+					for (std::map<int, Client>::iterator client_list = this->client.begin(); client_list != this->client.end(); client_list++) {
+						if (client_list->second.get_nick() == nick) {
+							iterator->add_invinted(client_list->second, this->client.find(client_fd)->second);
+							std::string buffer(":" + this->client.find(client_fd)->second.get_nick() + "!" + this->client.find(client_fd)->second.get_user() + "@" + this->client.find(client_fd)->second.get_host() + " INVITE " + nick + " :" + command + "\n");
+							send(client_list->first, buffer.c_str(), buffer.length(), MSG_DONTWAIT);
+							break;
+						}
+					}
+				} else if (iterator->get_name() == command && !iterator->is_member(client_fd)) {
+					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " is not in the channel " << iterator->get_name() << std::endl;
+				}
+			}	
+		}
+	}
+
 	if (command == "TOPIC") {
 		token >> command;
 		if (!command.empty() && command != "TOPIC") {

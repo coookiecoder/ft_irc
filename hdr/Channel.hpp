@@ -15,6 +15,7 @@ class Channel {
         std::string password;
         std::list<Client> member;
         std::list<Client> operator_member;
+        std::list<Client> invinted_member;
 
         bool invit_only;
         bool topic_restriction;
@@ -29,6 +30,7 @@ class Channel {
 
         void add_member(const Client& new_client, std::string password);
         void add_operator(const Client& new_operator, Client& user);
+		void add_invinted(const Client& new_client, Client& user);
 
         void set_invit_only(Client& user);
         void set_invit_open(Client& user);
