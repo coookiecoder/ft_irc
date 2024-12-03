@@ -60,6 +60,14 @@ void Channel::set_user_limit(int new_user_limit, Client& user) {
         user_limit = new_user_limit;
 }
 
+bool Channel::is_member(int client_fd) {
+	for (std::list<Client>::iterator client_list = this->member.begin(); client_list != this->member.end(); client_list++) {
+		if (client_list->get_fd() == client_fd)
+			return (true);
+	}
+	return (false);
+}
+
 std::string Channel::get_name() {
     return this->name;
 }

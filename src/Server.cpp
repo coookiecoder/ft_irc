@@ -82,7 +82,7 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 			//send to a channel
 			std::string message_to_client = message.substr(pos + 1);
 			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
-				if (iterator->get_name() == command) {
+				if (iterator->get_name() == command && iterator->is_member(client_fd)) {
 					for (std::list<Client>::iterator client_list = iterator->get_member_begin(); client_list != iterator->get_member_end(); client_list++) {
 						if (client_list->get_fd() == client_fd)
 							continue;
@@ -91,6 +91,8 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 						std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " sent a message to " << client_list->get_fd() << std::endl;
 					}
 					return std::string("");
+				} else if (iterator->get_name() == command && !iterator->is_member(client_fd)) {
+					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " is not in the channel " << iterator->get_name() << std::endl;
 				}
 			}
 		}

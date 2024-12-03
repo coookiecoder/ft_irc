@@ -36,6 +36,8 @@ class Channel {
 
         void set_user_limit(int new_user_limit, Client& user);
 
+		bool is_member(int client_fd);
+
         std::string get_name();
 
         std::list<Client>::iterator get_member_begin();
