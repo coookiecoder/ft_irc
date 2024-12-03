@@ -126,6 +126,19 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 		}
 	}
 
+	if (command == "TOPIC") {
+		token >> command;
+		if (!command.empty() && command != "TOPIC") {
+			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
+				if (iterator->get_name() == command && iterator->is_member(client_fd)) {
+					return (iterator->set_topic(message, this->client.find(client_fd)->second));
+				} else if (iterator->get_name() == command && !iterator->is_member(client_fd)) {
+					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " is not in the channel " << iterator->get_name() << std::endl;
+				}
+			}	
+		}
+	}
+
 	return std::string("");
 }
 

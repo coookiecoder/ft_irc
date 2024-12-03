@@ -13,11 +13,19 @@ void Channel::set_name(const std::string &name) {
     this->name = name;
 }
 
-void Channel::set_topic(const std::string &topic, Client& user) {
-    if (topic_restriction && find(operator_member.begin(), operator_member.end(), user) != operator_member.end())
+std::string Channel::set_topic(const std::string &topic, Client& user) {
+    if (topic_restriction && find(operator_member.begin(), operator_member.end(), user) != operator_member.end()) {
         this->topic = topic;
-    else if (!topic_restriction)
+		size_t pos = topic.find(':');
+		std::string message_to_client = topic.substr(pos + 1);
+		return std::string(":" + user.get_nick() + "!" + user.get_user() + "@" + user.get_host() + " TOPIC " + name + " :" + message_to_client + "\n");
+	} else if (!topic_restriction) {
         this->topic = topic;
+		size_t pos = topic.find(':');
+		std::string message_to_client = topic.substr(pos + 1);
+		return std::string(":" + user.get_nick() + "!" + user.get_user() + "@" + user.get_host() + " TOPIC " + name + " :" + message_to_client + "\n");
+	}
+	return std::string("");
 }
 
 void Channel::set_password(const std::string &password, Client& user) {

@@ -24,7 +24,7 @@ class Channel {
         ~Channel();
 
         void set_name(const std::string &name);
-        void set_topic(const std::string &topic, Client& user);
+		std::string set_topic(const std::string &topic, Client& user);
         void set_password(const std::string &password, Client& user);
 
         void add_member(const Client& new_client);
