@@ -17,7 +17,7 @@ class Channel {
         std::list<Client> operator_member;
         std::list<Client> invinted_member;
 
-        bool invit_only;
+        bool invite_only;
         bool topic_restriction;
         int user_limit;
     public:
@@ -28,8 +28,9 @@ class Channel {
 		std::string set_topic(const std::string &topic, Client& user);
         void set_password(const std::string &password, Client& user);
 
-        void add_member(const Client& new_client, std::string password);
+        bool add_member(const Client& new_client, std::string password);
         void add_operator(const Client& new_operator, Client& user);
+		void remove_operator(Client& new_operator, Client& user);
 		void add_invinted(const Client& new_client, Client& user);
 
         void set_invit_only(Client& user);
@@ -39,6 +40,8 @@ class Channel {
         void set_topic_not_restricted(Client& user);
 
         void set_user_limit(int new_user_limit, Client& user);
+
+		void set_mode(std::string message, Client& user);
 
 		bool is_member(int client_fd);
 	

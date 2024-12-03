@@ -28,7 +28,7 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 	if (command == "CAP")
 		return this->client.find(client_fd)->second.cap(token);
 
-	if (this->client.find(client_fd)->second.authenticated == false)
+	if (!this->client.find(client_fd)->second.authenticated)
 		return std::string (":server 451 * :You have not registered\n");
 
 	if (command == "NICK") {
@@ -61,18 +61,20 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 			// Check if the channel already exists
 			for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
 				if (iterator->get_name() == command) {
-					std::string password;
-					token >> password;
-					iterator->add_member(this->client.find(client_fd)->second, password);
-					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " joined " << command << std::endl;
+					std::string password_client;
+					token >> password_client;
+					if (iterator->add_member(this->client.find(client_fd)->second, password_client))
+						std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " joined " << command << std::endl;
+					else
+						return std::string (":server 471 " + this->client.find(client_fd)->second.get_nick() + " " + command + " :Cannot join channel\n");
 					return std::string("");
 				}
 			}
 			// Create a new channel
 			this->channel.push_back(Channel(command, this->client.find(client_fd)->second));
-			std::string password;
-			token >> password;
-			this->channel.back().add_member(this->client.find(client_fd)->second, password);
+			std::string password_client;
+			token >> password_client;
+			this->channel.back().add_member(this->client.find(client_fd)->second, password_client);
 			std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " created " << command << std::endl;
 			return std::string("");
 		}
@@ -162,6 +164,22 @@ std::string Server::handle_message(const std::string& message, int client_fd) {
 					std::cout << "[info]  | " << this->client.find(client_fd)->second.get_nick() << " is not in the channel " << iterator->get_name() << std::endl;
 				}
 			}	
+		}
+	}
+
+	if (command == "MODE") {
+		std::string command;
+		token >> command;
+		if (!command.empty() && command != "MODE") {
+			if (command[0] == '#') {
+				// Handle channel mode change
+				for (std::list<Channel>::iterator iterator = this->channel.begin(); iterator != this->channel.end(); iterator++) {
+					if (iterator->get_name() == command) {
+						iterator->set_mode(message, this->client.find(client_fd)->second);
+						return std::string("");
+					}
+				}
+			}
 		}
 	}
 
